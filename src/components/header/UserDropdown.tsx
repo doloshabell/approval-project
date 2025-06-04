@@ -1,13 +1,15 @@
 import { useState } from "react";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { signOut } from "../../store/slices/authSlice";
 import Button from "../ui/button/Button";
+import type { RootState } from "../../store";
 
 export default function UserDropdown() {
   const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
+  const username = useSelector((state: RootState) => state.auth.user?.username || "User");
 
   function handleSignOut() {
     dispatch(signOut());
@@ -30,7 +32,7 @@ export default function UserDropdown() {
           <img src="/images/user/owner.jpg" alt="User" />
         </span>
 
-        <span className="block mr-1 font-medium text-theme-sm">Admin</span>
+        <span className="block mr-1 font-medium capitalize text-theme-sm">{username}</span>
         <svg
           className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""

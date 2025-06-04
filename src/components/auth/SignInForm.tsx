@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useDispatch } from "react-redux";
 import { signIn } from "../../store/slices/authSlice";
 import { EyeCloseIcon, EyeIcon } from "../../icons";
@@ -77,6 +77,14 @@ export default function SignInForm() {
                       )}
                     </span>
                   </div>
+                </div>
+                <div className="flex items-center justify-between">
+                  <Link
+                    to="/reset-password"
+                    className="text-sm text-brand-500 hover:text-brand-600 dark:text-brand-400"
+                  >
+                    Forgot password?
+                  </Link>
                 </div>
                 <div>
                   <Button className="w-full" size="sm">

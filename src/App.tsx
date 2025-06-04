@@ -5,6 +5,10 @@ import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import Home from "./pages/Dashboard/Home";
 import ProtectedRoute from "./components/common/ProtectedRoute";
+import UserProfiles from "./pages/UserProfiles";
+import ApprovalRequest from "./pages/ApprovalRequest/ApprovalRequest";
+import SppbFilling from "./pages/SPPBFilling/SppbFilling";
+import ApprovalMonitoring from "./pages/ApprovalMonitoring/ApprovalMonitoring";
 
 export default function App() {
   return (
@@ -18,6 +22,10 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route index element={<Home />} />
+            <Route path="/approval-monitoring" element={<ApprovalMonitoring />} />
+            <Route path="/approval-request" element={<ApprovalRequest />} />
+            <Route path="/sppb-filling" element={<SppbFilling />} />
+            <Route path="/profile" element={<UserProfiles />} />
             {/* Add more protected routes here */}
           </Route>
         </Route>
