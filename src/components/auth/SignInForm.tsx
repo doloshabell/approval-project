@@ -6,6 +6,7 @@ import { EyeCloseIcon, EyeIcon } from "../../icons";
 import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Button from "../ui/button/Button";
+import { loginUser } from "../../services/authService";
 
 export default function SignInForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -15,19 +16,23 @@ export default function SignInForm() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
+  
     if (!username || !password) {
       alert("Please enter username and password.");
       return;
     }
-
-    // Fake auth, assume successful
-    dispatch(signIn({ username, password }));
-
-    // Redirect to homepage after login
-    navigate("/");
+  
+    try {
+      const userData = await loginUser({ username, password });
+  
+      dispatch(signIn(userData));
+      navigate("/");
+    } catch (error) {
+      console.error("Login failed:", error);
+      alert("Login gagal. Periksa kembali username dan password Anda.");
+    }
   };
 
   return (

@@ -5,14 +5,24 @@ import { useDispatch, useSelector } from "react-redux";
 import { signOut } from "../../store/slices/authSlice";
 import Button from "../ui/button/Button";
 import type { RootState } from "../../store";
+import { logoutUser } from "../../services/authService";
 
 export default function UserDropdown() {
   const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
-  const username = useSelector((state: RootState) => state.auth.user?.username || "User");
+  const user = useSelector((state: RootState) => state.auth.user);
 
-  function handleSignOut() {
-    dispatch(signOut());
+  async function handleSignOut() {
+    try {
+      const token = localStorage.getItem("userToken");
+      if (!token) throw new Error("Token not found");
+
+      await logoutUser(token);
+    } catch (error) {
+      console.error("Logout failed:", error);
+    } finally {
+      dispatch(signOut());
+    }
   }
 
   function toggleDropdown() {
@@ -32,7 +42,9 @@ export default function UserDropdown() {
           <img src="/images/user/owner.jpg" alt="User" />
         </span>
 
-        <span className="block mr-1 font-medium capitalize text-theme-sm">{username}</span>
+        <span className="block mr-1 font-medium capitalize text-theme-sm">
+          {user?.firstName || "User"}
+        </span>
         <svg
           className={`stroke-gray-500 dark:stroke-gray-400 transition-transform duration-200 ${
             isOpen ? "rotate-180" : ""
@@ -59,12 +71,9 @@ export default function UserDropdown() {
         className="absolute right-0 mt-[17px] flex w-[260px] flex-col rounded-2xl border border-gray-200 bg-white p-3 shadow-theme-lg dark:border-gray-800 dark:bg-gray-dark"
       >
         <div>
-          <span className="block font-medium text-gray-700 text-theme-sm dark:text-gray-400">
-            Admin
+          <span className="block capitalize font-medium text-gray-700 text-theme-sm dark:text-gray-400">
+            {user?.role.name} - {user?.district.name}
           </span>
-          {/* <span className="mt-0.5 block text-theme-xs text-gray-500 dark:text-gray-400">
-            randomuser@pimjo.com
-          </span> */}
         </div>
 
         <ul className="flex flex-col gap-1 pt-4 pb-3 border-b border-gray-200 dark:border-gray-800">

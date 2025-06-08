@@ -1,9 +1,25 @@
-// store/slices/authSlice.ts
 import { createSlice, PayloadAction } from "@reduxjs/toolkit";
 
 type UserData = {
+  id: number;
   username: string;
-  password: string;
+  firstName: string;
+  lastName: string;
+  role: {
+    id: number;
+    name: string;
+    code: string;
+  };
+  district: {
+    id: number;
+    name: string;
+    code: string;
+    estate: {
+      id: number;
+      name: string;
+      code: string;
+    };
+  };
 };
 
 type AuthState = {
@@ -22,10 +38,12 @@ const authSlice = createSlice({
       state.user = action.payload;
       localStorage.setItem("userData", JSON.stringify(action.payload));
     },
-    signOut(state) {
+    signOut: (state) => {
       state.user = null;
-      localStorage.removeItem("userData");
-    },
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+    }
+    
   },
 });
 

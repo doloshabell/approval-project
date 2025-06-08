@@ -18,4 +18,13 @@ export default defineConfig({
       },
     }),
   ],
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://62.72.21.8:8080',
+        changeOrigin: true,
+        rewrite: path => path.replace(/^\//, ''),
+      },
+    },
+  },  
 });
