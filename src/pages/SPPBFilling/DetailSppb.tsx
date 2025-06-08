@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useLocation, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
@@ -26,6 +27,7 @@ export default function DetailSppb() {
   const navigate = useNavigate();
   const params = new URLSearchParams(location.search);
   const from = params.get("from");
+  const token = localStorage.getItem("userToken");
 
   const getTitleBySource = () => {
     switch (from) {

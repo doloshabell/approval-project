@@ -1,5 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState } from "react";
 import ReactPaginate from "react-paginate";
+import { getAllAsset } from "../../services/assetService";
 
 interface Material {
   code: string;
@@ -17,15 +19,26 @@ export default function MaterialModal({
   const [materials, setMaterials] = useState<Material[]>([]);
   const [page, setPage] = useState(0);
   const itemsPerPage = 10;
+  const token = localStorage.getItem("userToken");
 
   useEffect(() => {
-    const dummyMaterials = Array.from({ length: 50 }, (_, i) => ({
-      code: `MAT-${1000 + i}`,
-      name: `Material ${i + 1}`,
-      satuan: "Kg",
-    }));
-    setMaterials(dummyMaterials);
-  }, []);
+    async function fetchMaterials() {
+      if (!token) return;
+      try {
+        const data = await getAllAsset(token);
+        const parsedMaterials: Material[] = data?.data?.map((item: any) => ({
+          code: item.code,
+          name: item.name,
+          satuan: item.unit,
+        })) ?? [];
+        setMaterials(parsedMaterials);
+      } catch (error) {
+        console.error("Gagal memuat data aset:", error);
+      }
+    }
+
+    fetchMaterials();
+  }, [token]);
 
   const pageCount = Math.ceil(materials.length / itemsPerPage);
   const currentItems = materials.slice(
