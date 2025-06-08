@@ -9,6 +9,7 @@ import UserProfiles from "./pages/UserProfiles";
 import ApprovalRequest from "./pages/ApprovalRequest/ApprovalRequest";
 import SppbFilling from "./pages/SPPBFilling/SppbFilling";
 import ApprovalMonitoring from "./pages/ApprovalMonitoring/ApprovalMonitoring";
+import DetailSppb from "./pages/SPPBFilling/DetailSppb";
 
 export default function App() {
   return (
@@ -23,8 +24,15 @@ export default function App() {
           <Route element={<AppLayout />}>
             <Route index element={<Home />} />
             <Route path="/approval-monitoring" element={<ApprovalMonitoring />} />
+            <Route path="/approval-monitoring/detail/:id" element={<DetailSppb />} />
+
             <Route path="/approval-request" element={<ApprovalRequest />} />
+            <Route path="/approval-request/detail/:id" element={<DetailSppb />} />
+
             <Route path="/sppb-filling" element={<SppbFilling />} />
+            <Route path="/sppb-filling/detail/:id" element={<DetailSppb />} />
+            <Route path="/sppb-filling/add" element={<DetailSppb />} />
+
             <Route path="/profile" element={<UserProfiles />} />
             {/* Add more protected routes here */}
           </Route>

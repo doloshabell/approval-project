@@ -6,7 +6,7 @@ export default function Home() {
     <>
       <PageMeta title="Dashboard" description="Home Dashboard Page" />
       <PageBreadcrumb pageTitle="Dashboard" />
-      <div className="rounded-2xl bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
+      <div className="border rounded-2xl bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
         <div className="space-y-4 text-sm">
           <div className="grid grid-cols-6 gap-1">
             <div></div>
@@ -47,7 +47,7 @@ export default function Home() {
             </div>
           ))}
 
-          <div className="flex flex-wrap gap-5 mt-7 text-base">
+          <div className="flex flex-wrap items-start gap-5 mt-7 text-base">
             {/* Tabel Status */}
             <div className="border text-base">
               <div className="grid grid-cols-4 font-bold text-center bg-gray-100 border-b">
@@ -56,26 +56,26 @@ export default function Home() {
                 <div className="px-4 py-1">G</div>
                 <div className="px-4 py-1">T</div>
               </div>
-              <div className="grid grid-cols-4 h-fit text-center border-b">
+              <div className="grid grid-cols-4 text-center border-b">
                 <div className="bg-blue-100 px-2 font-semibold">
                   Waiting
                 </div>
-                <div className="px-4 py-1">2</div>
-                <div className="px-4 py-1">1</div>
-                <div className="px-4 py-1">-</div>
+                <div className="px-4 py-1 text-gray-800 dark:text-white/90">2</div>
+                <div className="px-4 py-1 text-gray-800 dark:text-white/90">1</div>
+                <div className="px-4 py-1 text-gray-800 dark:text-white/90">-</div>
               </div>
               <div className="grid grid-cols-4 h-fit text-center">
                 <div className="bg-green-100 px-2 font-semibold">
                   Finish
                 </div>
-                <div className="px-4 py-1">8</div>
-                <div className="px-4 py-1">8</div>
-                <div className="px-4 py-1">8</div>
+                <div className="px-4 py-1 text-gray-800 dark:text-white/90">8</div>
+                <div className="px-4 py-1 text-gray-800 dark:text-white/90">8</div>
+                <div className="px-4 py-1 text-gray-800 dark:text-white/90">8</div>
               </div>
             </div>
 
             {/* Keterangan */}
-            <div className="flex flex-col gap-y-1 border p-2 leading-5 w-48">
+            <div className="flex flex-col gap-y-1 border p-2 text-gray-800 dark:text-white/90 leading-5 w-auto">
               <div>
                 <strong>Keterangan:</strong>
               </div>
