@@ -13,6 +13,8 @@ import {
   editSppbRequest,
   getDetailRequest,
 } from "../../services/requestSppbService";
+import ApprovalProgressBar from "../../components/ui/timeline/ApprovalProgressBar";
+import { Approval } from "../../types/approval";
 
 export interface DetailAsset {
   id: number;
@@ -84,6 +86,7 @@ export default function DetailSppb() {
   const token = localStorage.getItem("userToken");
   const storedUserData = localStorage.getItem("userData");
   const userData = storedUserData ? JSON.parse(storedUserData) : null;
+  const [approvals, setApprovals] = useState<Approval[]>([]);
 
   const [formData, setFormData] = useState({
     noRequest: "",
@@ -203,6 +206,7 @@ export default function DetailSppb() {
     try {
       const response = await getDetailRequest(id, token);
       const detailItems = response.data.detailRequest;
+      setApprovals(response.data.detailApproval || []);
 
       // Set formData
       setFormData({
@@ -239,6 +243,11 @@ export default function DetailSppb() {
     <>
       <PageMeta title={getTitleBySource()} description="Detail SPPB Page" />
       <PageBreadcrumb pageTitle={from == null ? "Form SPPB" : "SPPB Detail"} />
+
+      {from === "monitoring" && (
+          <ApprovalProgressBar approvals={approvals} />
+      )}
+
       <div className="border rounded-2xl bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <Input

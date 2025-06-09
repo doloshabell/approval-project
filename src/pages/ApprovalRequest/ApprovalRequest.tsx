@@ -1,15 +1,15 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState } from "react";
 import ReactPaginate from "react-paginate";
-import Input from "../../components/form/input/InputField";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
-import { FaSearch, FaCheck, FaTimes } from "react-icons/fa";
+import { FaCheck, FaTimes } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import {
   getAllRequestByDistrictId,
   getAllRequest,
 } from "../../services/requestSppbService";
+import { approvingRequest } from "../../services/approvalService";
 
 interface SupplyRequestItem {
   id: number;
@@ -125,6 +125,29 @@ export default function ApprovalRequest() {
     fetchData();
   }, []);
 
+  const handleApproval = async (id: number, isApproved: boolean) => {
+    const confirmMsg = isApproved ? "Approve this request?" : "Reject this request?";
+    const confirmed = window.confirm(confirmMsg);
+  
+    if (!confirmed) return;
+  
+    try {
+      const token = localStorage.getItem("userToken");
+      if (!token) throw new Error("Token not found");
+  
+      await approvingRequest(id.toString(), isApproved, token);
+  
+      alert("Request has been " + (isApproved ? "approved." : "rejected."));
+  
+      // Refresh data setelah action
+      fetchData();
+    } catch (error) {
+      console.error("Approval failed", error);
+      alert("Failed to process request.");
+    }
+  };
+  
+
   return (
     <>
       <PageMeta title="Approval Request" description="Approval Request Page" />
@@ -200,22 +223,14 @@ export default function ApprovalRequest() {
                       hidden={userData.role?.id == 1}
                     >
                       <button
-                        onClick={() =>
-                          navigate(
-                            `/approval-request/detail/${item.sppb}?from=request`
-                          )
-                        }
+                        onClick={() => handleApproval(item.id, true)}
                         className="inline-flex items-center justify-center w-8 h-8 bg-green-500 hover:bg-green-600 text-white rounded"
                         title="Approve"
                       >
                         <FaCheck size={14} />
                       </button>
                       <button
-                        onClick={() =>
-                          navigate(
-                            `/approval-request/detail/${item.sppb}?from=request`
-                          )
-                        }
+                        onClick={() => handleApproval(item.id, false)}
                         className="inline-flex items-center justify-center w-8 h-8 bg-red-500 hover:bg-red-600 text-white rounded"
                         title="Reject"
                       >

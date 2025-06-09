@@ -121,6 +121,11 @@ export default function SppbFilling() {
   }, []);
 
   const deleteRequestSppb = async (id: string) => {
+    const confirmMsg = "Delete this request?";
+    const confirmed = window.confirm(confirmMsg);
+
+    if (!confirmed) return;
+
     try {
       await deleteRequest(id, token ?? "");
       fetchData();
@@ -213,7 +218,11 @@ export default function SppbFilling() {
                       <FiEdit2 size={18} />
                     </button>
                     <button
-                      className="text-red-600 hover:text-red-800"
+                      className={`text-red-600 hover:text-red-800 ${
+                        userData.role?.id !== 1 && userData.role?.id !== 4
+                          ? "hidden"
+                          : ""
+                      }`}
                       title="Delete"
                       onClick={() => deleteRequestSppb(item.id.toString())}
                     >
