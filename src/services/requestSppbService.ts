@@ -69,3 +69,13 @@ export async function deleteRequest(id: string, token: string) {
 
   return response.data;
 }
+
+export async function editSppbRequest(id: string, payload: SppbPayload, token: string) {
+  const response = await api.put(`/request/${encodeURIComponent(id)}`, payload, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return response.data;
+}

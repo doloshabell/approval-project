@@ -10,6 +10,7 @@ import MaterialModal from "../../components/modals/MaterialModal";
 import { FaSearch } from "react-icons/fa";
 import {
   createSppbRequest,
+  editSppbRequest,
   getDetailRequest,
 } from "../../services/requestSppbService";
 
@@ -49,6 +50,7 @@ export interface SppbDetailData {
   companyName: string;
   noRequest: string;
   detailRequest: DetailRequest[];
+  detailDistrict: DetailDistrict;
 }
 
 export interface SppbDetailResponse {
@@ -84,9 +86,12 @@ export default function DetailSppb() {
   const userData = storedUserData ? JSON.parse(storedUserData) : null;
 
   const [formData, setFormData] = useState({
+    noRequest: "",
+    noSppbGoodDispatch: "",
+    noSppbSupplyRequest: "",
     companyName: "PT SWAKARSA SINARSENTOSA",
-    afdeling: userData?.district?.name,
-    estate: userData?.district?.estate?.name,
+    afdeling: userData?.district?.name || "",
+    estate: userData?.district?.estate?.name || "",
     workCode: "",
   });
 
@@ -170,13 +175,15 @@ export default function DetailSppb() {
       }));
 
       const payload = {
+        noRequest: formData.noRequest,
+        noSppbGoodDispatch: formData.noSppbGoodDispatch,
+        noSppbSupplyRequest: formData.noSppbSupplyRequest,
         workCode: formData.workCode,
         requestDetail,
       };
 
-      console.log(payload);
-
-      const response = await createSppbRequest(payload, token);
+      if (from?.length == 0) await createSppbRequest(payload, token);
+      else await editSppbRequest(id!, payload, token);
 
       alert("SPPB berhasil disimpan.");
       navigate(-1);
@@ -199,14 +206,18 @@ export default function DetailSppb() {
 
       // Set formData
       setFormData({
-        companyName: response.data.noRequest || "",
+        noRequest: response.data.noRequest || "",
+        noSppbGoodDispatch: response.data.noSppbGoodDispatch || "",
+        noSppbSupplyRequest: response.data.noSppbSupplyRequest || "",
+        companyName: "PT SWAKARSA SINARSENTOSA",
+        estate: response.data.detailDistrict?.estate?.name || "",
+        afdeling: response.data.detailDistrict?.name || "",
         workCode: response.data.workCode || "",
-        estate: response.data.detailDistrict.estate.name || "",
-        afdeling: response.data.detailDistrict.name || "",
       });
 
       // Map items
       const mappedItems: SppbItem[] = detailItems.map((item: any) => ({
+        assetId: item.detailAsset?.id || 0,
         materialCode: item.detailAsset?.materialCode || "",
         materialName: item.detailAsset?.assetName || "",
         measurementUnit: item.detailAsset?.measurementUnit || "",
