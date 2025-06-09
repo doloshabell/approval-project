@@ -34,3 +34,23 @@ export async function createSppbRequest(payload: SppbPayload, token: string) {
   
     return response.data;
   }
+
+  export async function getAllRequestByDistrictId(districtId: number, token: string) {
+    const response = await api.get(`/approval/?districtId=${encodeURIComponent(districtId)}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  
+    return response.data;
+  }
+
+    export async function getDetailRequest(id: string, token: string) {
+    const response = await api.get(`/request/${encodeURIComponent(id)}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  
+    return response.data;
+  }

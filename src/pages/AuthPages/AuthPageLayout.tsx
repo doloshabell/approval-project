@@ -16,11 +16,11 @@ export default function AuthLayout({
             {/* <!-- ===== Common Grid Shape Start ===== --> */}
             <GridShape />
             <div className="flex flex-col items-center max-w-xs">
-              <p className="font-semibold text-xl text-white/90">
-                PT SWAKARSA SINARSENTOSA
+              <p className="font-semibold text-8xl text-white/90">
+                SIGAP
               </p>
               <p className="text-center text-gray-400 dark:text-white/60">
-                Welcome to SPPB Dashboard
+                Sistem Gudang Akurat dan Pelayanan Prima
               </p>
             </div>
           </div>

@@ -1,12 +1,57 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { useEffect, useState } from "react";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import Input from "../../components/form/input/InputField";
 import { AiFillDelete } from "react-icons/ai";
 import MaterialModal from "../../components/modals/MaterialModal";
 import { FaSearch } from "react-icons/fa";
+import { getDetailRequest } from "../../services/requestSppbService";
+
+export interface DetailAsset {
+  id: number;
+  materialCode: string;
+  assetName: string;
+  measurementUnit: string;
+}
+
+export interface DetailRequest {
+  id: number;
+  reason: string;
+  quantity: number;
+  detailAsset: DetailAsset;
+}
+
+export interface DetailDistrict {
+  id: number;
+  name: string;
+  code: number;
+  detailEstate: DetailEstate;
+}
+
+export interface DetailEstate {
+  id: number;
+  reason: string;
+  quantity: number;
+}
+
+export interface SppbDetailData {
+  id: number;
+  workCode: string;
+  noSppbSupplyRequest: string;
+  noSppbGoodDispatch: string;
+  warehouseGoodsHandoverDate: string | null;
+  companyName: string;
+  noRequest: string;
+  detailRequest: DetailRequest[];
+}
+
+export interface SppbDetailResponse {
+  data: SppbDetailData;
+  responseCode: string;
+  responseMessage: string;
+}
 
 interface SppbItem {
   materialCode: string;
@@ -23,11 +68,19 @@ interface Material {
 }
 
 export default function DetailSppb() {
+  const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
   const params = new URLSearchParams(location.search);
   const from = params.get("from");
   const token = localStorage.getItem("userToken");
+  const [formData, setFormData] = useState({
+    noSppb: "",
+    kodeKerja: "",
+    namaPerusahaan: "",
+    estate: "",
+    afdeling: "",
+  });
 
   const getTitleBySource = () => {
     switch (from) {
@@ -42,11 +95,7 @@ export default function DetailSppb() {
     }
   };
 
-  const [items, setItems] = useState<SppbItem[]>([
-    { materialCode: "", materialName: "", satuan: "", qty: "", keterangan: "" },
-  ]);
-
-  // State untuk modal material
+  const [items, setItems] = useState<SppbItem[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedItemIndex, setSelectedItemIndex] = useState<number | null>(
     null
@@ -76,17 +125,14 @@ export default function DetailSppb() {
   };
 
   const handleRemoveItem = (index: number) => {
-    const updatedItems = items.filter((_, i) => i !== index);
-    setItems(updatedItems);
+    setItems(items.filter((_, i) => i !== index));
   };
 
-  // Buka modal untuk item index tertentu
   const openMaterialModal = (index: number) => {
     setSelectedItemIndex(index);
     setModalOpen(true);
   };
 
-  // Setelah pilih material, update items dan tutup modal
   const handleSelectMaterial = (material: Material) => {
     if (selectedItemIndex === null) return;
     const updatedItems = [...items];
@@ -100,34 +146,89 @@ export default function DetailSppb() {
     setModalOpen(false);
   };
 
-  // contoh fungsi simpan data (bisa kamu ganti sesuai kebutuhan)
   const handleSave = () => {
     alert("Data disimpan!");
-    // TODO: logic save data ke backend / state management
   };
 
-  // cancel kembali ke halaman sebelumnya
   const handleCancel = () => {
     navigate(-1);
   };
+
+  const fetchDetail = async () => {
+    if (!token || !id) return;
+
+    try {
+      const response = await getDetailRequest(id, token);
+      const detailItems = response.data.detailRequest;
+
+      // Set formData
+      setFormData({
+        noSppb: response.data.noRequest || "",
+        kodeKerja: response.data.workCode || "",
+        namaPerusahaan: response.data.companyName || "",
+        estate: response.data.detailDistrict.estate.name || "",
+        afdeling: response.data.detailDistrict.name || "",
+      });
+
+      // Map items
+      const mappedItems: SppbItem[] = detailItems.map((item: any) => ({
+        materialCode: item.detailAsset?.materialCode || "",
+        materialName: item.detailAsset?.assetName || "",
+        satuan: item.detailAsset?.measurementUnit || "",
+        qty: item.quantity?.toString() || "0",
+        keterangan: item.reason || "",
+      }));
+
+      setItems(mappedItems);
+    } catch (error) {
+      console.error("Error fetching SPPB detail:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchDetail();
+  }, []);
 
   return (
     <>
       <PageMeta title={getTitleBySource()} description="Detail SPPB Page" />
       <PageBreadcrumb pageTitle="SPPB Detail" />
       <div className="border rounded-2xl bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
-        {/* Header Form */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <Input label="No. SPPB" name="noSppb" />
-          <Input label="Kode Kerja" name="kodeKerja" />
-          <Input label="Nama Perusahaan" name="namaPerusahaan" />
-          <Input label="Estate" name="estate" />
-          <Input label="Afdeling" name="afdeling" />
+          <Input
+            label="No. SPPB"
+            name="noSppb"
+            value={formData.noSppb}
+            readOnly
+          />
+          <Input
+            label="Kode Kerja"
+            name="kodeKerja"
+            value={formData.kodeKerja}
+            readOnly
+          />
+          <Input
+            label="Nama Perusahaan"
+            name="namaPerusahaan"
+            value={formData.namaPerusahaan}
+            readOnly
+          />
+          <Input
+            label="Estate"
+            name="estate"
+            value={formData.estate}
+            readOnly
+          />
+          <Input
+            label="Afdeling"
+            name="afdeling"
+            value={formData.afdeling}
+            readOnly
+          />
         </div>
 
         <hr className="my-5 border-t-2 rounded-md border-gray-300 dark:border-white/90" />
 
-        {/* Items Table */}
         <div className="mb-4">
           <div className="flex items-center justify-between mb-2 w-full">
             <h2 className="font-semibold text-lg dark:text-white/90">
@@ -171,7 +272,6 @@ export default function DetailSppb() {
                         />
                       </div>
                     </td>
-
                     <td className="border px-3 py-2">
                       <Input
                         readOnly
@@ -222,7 +322,6 @@ export default function DetailSppb() {
             </table>
           </div>
 
-          {/* Buttons Save & Cancel */}
           <div className="mt-6 flex justify-end gap-4">
             <button
               type="button"
@@ -242,7 +341,6 @@ export default function DetailSppb() {
         </div>
       </div>
 
-      {/* Modal Material */}
       {modalOpen && (
         <MaterialModal
           onSelect={handleSelectMaterial}

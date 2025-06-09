@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ReactPaginate from "react-paginate";
 import PageMeta from "../../components/common/PageMeta";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
@@ -6,6 +6,43 @@ import Input from "../../components/form/input/InputField";
 import { FiEdit2, FiTrash2 } from "react-icons/fi";
 import { FaPlus, FaSearch } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+import {
+  getAllRequestByDistrictId,
+  getAllRequest,
+} from "../../services/requestSppbService";
+
+interface SupplyRequestItem {
+  id: number;
+  workCode: string;
+  noSppbSupplyRequest: string;
+  noSppbGoodDispatch: string;
+  warehouseGoodsHandoverDate: string | null;
+  companyName: string;
+  noRequest: string;
+  lastApprovalDate: Date;
+  isFullyApproved: boolean;
+}
+
+export interface SupplyRequestResponse {
+  data: SupplyRequestItem[];
+  currentPage: number;
+  pageSize: number;
+  totalItems: number;
+  totalPages: number;
+  responseCode: string;
+  responseMessage: string;
+}
+
+interface MappedRequestItem {
+  id: number;
+  no: number;
+  sppb: string;
+  estate: string;
+  kdkj: string;
+  dateApproval: string;
+  status: "Approved" | "Rejected";
+}
+
 
 type SppbItem = {
   no: string;
@@ -15,12 +52,12 @@ type SppbItem = {
 };
 
 // Dummy data
-const dummyData: SppbItem[] = Array.from({ length: 53 }, (_, i) => ({
-  no: `SPPB-${i + 1}`,
-  estate: `Estate ${i + 1}`,
-  kdkj: `KDKJ-${i + 1}`,
-  tanggal: `${(i % 30) + 1}-06-2025`.padStart(10, "0"),
-}));
+// const dummyData: SppbItem[] = Array.from({ length: 53 }, (_, i) => ({
+//   no: `SPPB-${i + 1}`,
+//   estate: `Estate ${i + 1}`,
+//   kdkj: `KDKJ-${i + 1}`,
+//   tanggal: `${(i % 30) + 1}-06-2025`.padStart(10, "0"),
+// }));
 
 const perPageOptions = [10, 25, 50, 100];
 
@@ -29,10 +66,13 @@ export default function SppbFilling() {
   const [currentPage, setCurrentPage] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
+    const [data, setData] = useState<MappedRequestItem[] | null>(null);
 
-  const filteredData = dummyData.filter((item) =>
-    item.no.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredData = data
+    ? data.filter((item) =>
+        item.sppb.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
 
   const pageCount = Math.ceil(filteredData.length / itemsPerPage);
   const offset = currentPage * itemsPerPage;
@@ -49,6 +89,51 @@ export default function SppbFilling() {
     setItemsPerPage(Number(e.target.value));
     setCurrentPage(0);
   };
+
+
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("userToken");
+        if (!token) throw new Error("Token not found");
+        // console.log(localStorage.getItem("userData"));
+  
+        const userDataString = localStorage.getItem("userData");
+  
+        if (userDataString) {
+          const userData = JSON.parse(userDataString);
+          const districtId = userData?.district?.id;
+  
+          const roleCode = userData?.role?.code;
+  
+          console.log("District ID:", userData);
+  
+        const response: SupplyRequestResponse =
+          roleCode === "admin"
+            ? await getAllRequestByDistrictId(districtId, token)
+            : await getAllRequest('', token);
+  
+        const mapped = response.data.map((item, index) => ({
+          id: item.id,
+          no: index + 1,
+          sppb: item.noSppbSupplyRequest,
+          estate: item.companyName.trim(),
+          kdkj: item.workCode,
+          dateApproval: item.lastApprovalDate ?? "N/A",
+          status: item.isFullyApproved == true ? "Yes" : "No",
+        }));
+  
+        setData(mapped);
+        }
+        // const response: SupplyRequestResponse = await getAllRequest("", token);
+  
+      } catch (err) {
+        console.error("Failed to fetch data", err);
+      }
+    };
+  
+    useEffect(() => {
+      fetchData();
+    }, []);
 
   return (
     <>
