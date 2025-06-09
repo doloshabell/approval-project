@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from "react";
 import ReactPaginate from "react-paginate";
 import Input from "../../components/form/input/InputField";
@@ -10,6 +11,7 @@ import {
   getAllRequestByDistrictId,
   getAllRequest,
 } from "../../services/requestSppbService";
+
 interface SupplyRequestItem {
   id: number;
   workCode: string;
@@ -37,19 +39,11 @@ interface MappedRequestItem {
   no: number;
   sppb: string;
   estate: string;
-  kdkj: string;
+  workCode: string;
   dateApproval: string;
+  lastApprovalDate: string;
   status: "Approved" | "Rejected";
 }
-
-// const dummyData = Array.from({ length: 123 }, (_, i) => ({
-//   no: i + 1,
-//   sppb: `SPPB-${1000 + i}`,
-//   estate: `Estate ${i % 5}`,
-//   kdkj: `KDKJ-${i % 3}`,
-//   dateApproval: `2025-06-${((i % 30) + 1).toString().padStart(2, "0")}`,
-//   status: i % 2 === 0 ? "Approved" : "Rejected",
-// }));
 
 export default function ApprovalMonitoring() {
   const navigate = useNavigate();
@@ -58,11 +52,7 @@ export default function ApprovalMonitoring() {
   const [searchTerm, setSearchTerm] = useState("");
   const [data, setData] = useState<MappedRequestItem[] | null>(null);
 
-  const filteredData = data
-    ? data.filter((item) =>
-        item.sppb.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : [];
+  const filteredData = data ?? [];
 
   const pageCount = Math.ceil(filteredData.length / itemsPerPage);
   const offset = currentPage * itemsPerPage;
@@ -94,26 +84,30 @@ export default function ApprovalMonitoring() {
 
         const roleCode = userData?.role?.code;
 
-        console.log("District ID:", userData);
+        const response: SupplyRequestResponse =
+          roleCode === "admin"
+            ? await getAllRequestByDistrictId(districtId, token)
+            : await getAllRequest("", token);
 
-      const response: SupplyRequestResponse =
-        roleCode === "admin"
-          ? await getAllRequestByDistrictId(districtId, token)
-          : await getAllRequest('', token);
+        const mapped: MappedRequestItem[] = response.data.map(
+          (item, index) => ({
+            id: item.id,
+            no: index + 1,
+            sppb: item.noSppbSupplyRequest,
+            estate: item.companyName.trim(),
+            workCode: item.workCode,
+            dateApproval: item.lastApprovalDate
+              ? new Date(item.lastApprovalDate).toISOString().split("T")[0]
+              : "N/A",
+            lastApprovalDate: item.lastApprovalDate
+              ? new Date(item.lastApprovalDate).toISOString().split("T")[0]
+              : "N/A",
+            status: item.isFullyApproved ? "Approved" : "Rejected",
+          })
+        );
 
-      const mapped = response.data.map((item, index) => ({
-        id: item.id,
-        no: index + 1,
-        sppb: item.noSppbSupplyRequest,
-        estate: item.companyName.trim(),
-        kdkj: item.workCode,
-        dateApproval: item.lastApprovalDate ?? "N/A",
-        status: item.isFullyApproved == true ? "Yes" : "No",
-      }));
-
-      setData(mapped);
+        setData(mapped);
       }
-
     } catch (err) {
       console.error("Failed to fetch data", err);
     }
@@ -151,7 +145,7 @@ export default function ApprovalMonitoring() {
           </div>
 
           {/* Search bar */}
-          <div className="relative w-full max-w-sm">
+          {/* <div className="relative w-full max-w-sm">
             <Input
               type="text"
               placeholder="Search No. SPPB..."
@@ -163,7 +157,7 @@ export default function ApprovalMonitoring() {
               className="text-sm w-40 dark:text-white dark:bg-gray-800"
             />
             <FaSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white pointer-events-none" />
-          </div>
+          </div> */}
         </div>
 
         <div className="overflow-x-auto">
@@ -171,9 +165,8 @@ export default function ApprovalMonitoring() {
             <thead className="bg-gray-100 dark:bg-gray-800">
               <tr className="text-left">
                 <th className="border px-4 py-2">No</th>
-                <th className="border px-4 py-2">No SPPB</th>
-                <th className="border px-4 py-2">Estate</th>
-                <th className="border px-4 py-2">KDKJ</th>
+                <th className="border px-4 py-2">SPPB</th>
+                <th className="border px-4 py-2">Work Code</th>
                 <th className="border px-4 py-2">Date Approval</th>
                 <th className="border px-4 py-2">Fully Approved Request</th>
                 <th className="border px-4 py-2 text-center">Action</th>
@@ -185,13 +178,8 @@ export default function ApprovalMonitoring() {
                   <tr key={item.no}>
                     <td className="border px-4 py-2">{offset + idx + 1}</td>
                     <td className="border px-4 py-2">{item.sppb}</td>
-                    <td className="border px-4 py-2">{item.estate}</td>
-                    <td className="border px-4 py-2">{item.kdkj}</td>
-                    <td className="border px-4 py-2">
-                      {item.dateApproval
-                        ? item.dateApproval.substring(0, 10)
-                        : "-"}
-                    </td>
+                    <td className="border px-4 py-2">{item.workCode}</td>
+                    <td className="border px-4 py-2">{item.lastApprovalDate}</td>
                     <td className="border px-4 py-2">{item.status}</td>
                     <td className="border px-4 py-2 text-center">
                       <button

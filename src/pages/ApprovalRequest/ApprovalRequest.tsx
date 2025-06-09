@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useEffect, useState } from "react";
 import ReactPaginate from "react-paginate";
 import Input from "../../components/form/input/InputField";
@@ -18,6 +19,7 @@ interface SupplyRequestItem {
   warehouseGoodsHandoverDate: string | null;
   companyName: string;
   noRequest: string;
+  createdDate: Date;
   lastApprovalDate: Date;
   isFullyApproved: boolean;
 }
@@ -37,18 +39,12 @@ interface MappedRequestItem {
   no: number;
   sppb: string;
   estate: string;
-  kdkj: string;
+  workCode: string;
   dateApproval: string;
+  createdDate: string;
+  lastApprovalDate: string;
   status: "Approved" | "Rejected";
 }
-
-// const dummyData = Array.from({ length: 75 }, (_, i) => ({
-//   no: i + 1,
-//   sppb: `SPPB-${1000 + i}`,
-//   estate: `Estate ${i % 5}`,
-//   kdkj: `KDKJ-${i % 3}`,
-//   tanggal: `2025-06-${((i % 30) + 1).toString().padStart(2, "0")}`,
-// }));
 
 export default function ApprovalRequest() {
   const navigate = useNavigate();
@@ -56,12 +52,10 @@ export default function ApprovalRequest() {
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
   const [data, setData] = useState<MappedRequestItem[] | null>(null);
+  const storedUserData = localStorage.getItem("userData");
+  const userData = storedUserData ? JSON.parse(storedUserData) : null;
 
-  const filteredData = data
-    ? data.filter((item) =>
-        item.sppb.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : [];
+  const filteredData = data ?? [];
 
   const pageCount = Math.ceil(filteredData.length / itemsPerPage);
   const offset = currentPage * itemsPerPage;
@@ -100,15 +94,25 @@ export default function ApprovalRequest() {
             ? await getAllRequestByDistrictId(districtId, token)
             : await getAllRequest("", token);
 
-        const mapped = response.data.map((item, index) => ({
-          id: item.id,
-          no: index + 1,
-          sppb: item.noSppbSupplyRequest,
-          estate: item.companyName.trim(),
-          kdkj: item.workCode,
-          dateApproval: item.lastApprovalDate ?? "N/A",
-          status: item.isFullyApproved == true ? "Yes" : "No",
-        }));
+        const mapped: MappedRequestItem[] = response.data.map(
+          (item, index) => ({
+            id: item.id,
+            no: index + 1,
+            sppb: item.noSppbSupplyRequest,
+            estate: item.companyName.trim(),
+            workCode: item.workCode,
+            dateApproval: item.lastApprovalDate
+              ? new Date(item.lastApprovalDate).toISOString().split("T")[0]
+              : "N/A",
+            lastApprovalDate: item.lastApprovalDate
+              ? new Date(item.lastApprovalDate).toISOString().split("T")[0]
+              : "N/A",
+            createdDate: item.createdDate
+              ? new Date(item.createdDate).toISOString().split("T")[0]
+              : "N/A",
+            status: item.isFullyApproved ? "Approved" : "Rejected",
+          })
+        );
 
         setData(mapped);
       }
@@ -147,7 +151,7 @@ export default function ApprovalRequest() {
           </div>
 
           {/* Search bar */}
-          <div className="relative w-full max-w-sm">
+          {/* <div className="relative w-full max-w-sm">
             <Input
               type="text"
               placeholder="Search No. SPPB..."
@@ -159,7 +163,7 @@ export default function ApprovalRequest() {
               className="text-sm w-40 dark:text-white dark:bg-gray-800"
             />
             <FaSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white pointer-events-none" />
-          </div>
+          </div> */}
         </div>
 
         {/* Tabel */}
@@ -167,24 +171,34 @@ export default function ApprovalRequest() {
           <table className="min-w-full table-auto border text-sm dark:text-white/90">
             <thead className="bg-gray-100 dark:bg-gray-800">
               <tr className="text-left">
-                <th className="border px-4 py-2">No</th>
-                <th className="border px-4 py-2">No SPPB</th>
-                <th className="border px-4 py-2">Estate</th>
-                <th className="border px-4 py-2">KDKJ</th>
-                <th className="border px-4 py-2">Tanggal</th>
-                <th className="border px-4 py-2 text-center">Action</th>
+                <th className="border px-4 py-2">No.</th>
+                <th className="border px-4 py-2">No. SPPB</th>
+                <th className="border px-4 py-2">Work Code</th>
+                <th className="border px-4 py-2">Date Request</th>
+                <th className="border px-4 py-2">Last Date Approval</th>
+                <th
+                  className="border px-4 py-2 text-center"
+                  hidden={userData.role?.id == 1}
+                >
+                  Action
+                </th>
               </tr>
             </thead>
             <tbody>
               {currentItems.length > 0 ? (
                 currentItems.map((item, idx) => (
-                  <tr key={item.no}>
+                  <tr key={item.id}>
                     <td className="border px-4 py-2">{offset + idx + 1}</td>
                     <td className="border px-4 py-2">{item.sppb}</td>
-                    <td className="border px-4 py-2">{item.estate}</td>
-                    <td className="border px-4 py-2">{item.kdkj}</td>
-                    <td className="border px-4 py-2">{item.tanggal}</td>
-                    <td className="border px-4 py-2 text-center space-x-2">
+                    <td className="border px-4 py-2">{item.workCode}</td>
+                    <td className="border px-4 py-2">{item.createdDate}</td>
+                    <td className="border px-4 py-2">
+                      {item.lastApprovalDate}
+                    </td>
+                    <td
+                      className="border px-4 py-2 text-center space-x-2"
+                      hidden={userData.role?.id == 1}
+                    >
                       <button
                         onClick={() =>
                           navigate(

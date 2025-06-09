@@ -82,7 +82,7 @@ export default function DetailSppb() {
   const token = localStorage.getItem("userToken");
   const storedUserData = localStorage.getItem("userData");
   const userData = storedUserData ? JSON.parse(storedUserData) : null;
-console.log(userData);
+
   const [formData, setFormData] = useState({
     companyName: "PT SWAKARSA SINARSENTOSA",
     afdeling: userData?.district?.name,
@@ -99,7 +99,7 @@ console.log(userData);
       case "filling":
         return "Detail SPPB Filling";
       default:
-        return "Detail SPPB";
+        return "Create SPPB";
     }
   };
 
@@ -148,7 +148,6 @@ console.log(userData);
   const handleSelectMaterial = (material: Material) => {
     if (selectedItemIndex === null) return;
     const updatedItems = [...items];
-    console.log(updatedItems);
     updatedItems[selectedItemIndex] = {
       ...updatedItems[selectedItemIndex],
       assetId: material.assetId,
@@ -178,7 +177,6 @@ console.log(userData);
       console.log(payload);
 
       const response = await createSppbRequest(payload, token);
-      console.log("SPPB berhasil dikirim:", response);
 
       alert("SPPB berhasil disimpan.");
       navigate(-1);
@@ -229,7 +227,7 @@ console.log(userData);
   return (
     <>
       <PageMeta title={getTitleBySource()} description="Detail SPPB Page" />
-      <PageBreadcrumb pageTitle="SPPB Detail" />
+      <PageBreadcrumb pageTitle={from == null ? "Form SPPB" : "SPPB Detail"} />
       <div className="border rounded-2xl bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <Input
@@ -271,7 +269,11 @@ console.log(userData);
             <button
               type="button"
               onClick={handleAddItem}
-              className="px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700"
+              className={`px-4 py-2 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 ${
+                userData.role?.id !== 1 && userData.role?.id !== 4
+                  ? "hidden"
+                  : ""
+              }`}
             >
               Add Item
             </button>
@@ -285,7 +287,15 @@ console.log(userData);
                   <th className="border px-3 py-2">Satuan</th>
                   <th className="border px-3 py-2">Qty</th>
                   <th className="border px-3 py-2">Keterangan</th>
-                  <th className="border px-3 py-2">Action</th>
+                  <th
+                    className={`border px-3 py-2 ${
+                      userData.role?.id !== 1 && userData.role?.id !== 4
+                        ? "hidden"
+                        : ""
+                    }`}
+                  >
+                    Action
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -341,7 +351,13 @@ console.log(userData);
                         rows={2}
                       />
                     </td>
-                    <td className="border px-3 py-2 text-center">
+                    <td
+                      className={`border px-3 py-2 text-center ${
+                        userData.role?.id !== 1 && userData.role?.id !== 4
+                          ? "hidden"
+                          : ""
+                      }`}
+                    >
                       <button
                         type="button"
                         onClick={() => handleRemoveItem(index)}
@@ -367,9 +383,13 @@ console.log(userData);
             <button
               type="button"
               onClick={handleSave}
-              className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+              className={`px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 ${
+                userData.role?.id !== 1 && userData.role?.id !== 4
+                  ? "hidden"
+                  : ""
+              }`}
             >
-              Save
+              {from?.length == 0 ? "Save" : "Edit"}
             </button>
           </div>
         </div>

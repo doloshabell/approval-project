@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
 import { useState, useEffect } from "react";
 import ReactPaginate from "react-paginate";
 import PageMeta from "../../components/common/PageMeta";
@@ -55,7 +56,10 @@ export default function SppbFilling() {
   const [searchTerm, setSearchTerm] = useState("");
   const [data, setData] = useState<MappedRequestItem[] | null>(null);
   const token = localStorage.getItem("userToken");
-  const userDataString = localStorage.getItem("userData");
+  const storedUserData = localStorage.getItem("userData");
+  const userData = storedUserData ? JSON.parse(storedUserData) : null;
+  console.log(userData.role.id);
+  console.log(userData.role?.id != 1 && userData.role?.id != 4);
 
   const filteredData = data ?? [];
 
@@ -78,8 +82,7 @@ export default function SppbFilling() {
     try {
       if (!token) throw new Error("Token not found");
 
-      if (userDataString) {
-        const userData = JSON.parse(userDataString);
+      if (storedUserData) {
         const districtId = userData?.district?.id;
 
         const roleCode = userData?.role?.code;
@@ -102,13 +105,12 @@ export default function SppbFilling() {
             createdDate: item.createdDate
               ? new Date(item.createdDate).toISOString().split("T")[0]
               : "N/A",
-            status: item.isFullyApproved ? "Approved" : "Rejected", // ✅ harus match dengan union type
+            status: item.isFullyApproved ? "Approved" : "Rejected",
           })
         );
 
         setData(mapped);
       }
-      // const response: SupplyRequestResponse = await getAllRequest("", token);
     } catch (err) {
       console.error("Failed to fetch data", err);
     }
@@ -156,7 +158,7 @@ export default function SppbFilling() {
             </div>
 
             {/* Search bar */}
-            <div className="relative w-full max-w-sm">
+            {/* <div className="relative w-full max-w-sm">
               <Input
                 type="text"
                 placeholder="Search No. SPPB..."
@@ -168,12 +170,14 @@ export default function SppbFilling() {
                 className="text-sm w-40 dark:text-white dark:bg-gray-800"
               />
               <FaSearch className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-white pointer-events-none" />
-            </div>
+            </div> */}
           </div>
           <button
             onClick={() => navigate(`/sppb-filling/add`)}
             type="button"
-            className="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition"
+            className={`inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition ${
+              userData.role?.id !== 1 && userData.role?.id !== 4 ? "hidden" : ""
+            }`}
           >
             <FaPlus className="text-xs" />
             Add SPPB
@@ -185,7 +189,7 @@ export default function SppbFilling() {
             <thead className="bg-gray-100 dark:bg-gray-800 dark:text-white">
               <tr>
                 <th className="border px-4 py-2 text-left">No.</th>
-                <th className="border px-4 py-2 text-left">Estate</th>
+                <th className="border px-4 py-2 text-left">No. SPPB</th>
                 <th className="border px-4 py-2 text-left">Work Code</th>
                 <th className="border px-4 py-2 text-left">Date Request</th>
                 <th className="border px-4 py-2 text-center">Action</th>
@@ -195,13 +199,13 @@ export default function SppbFilling() {
               {currentItems.map((item) => (
                 <tr key={item.id} className="border dark:text-white">
                   <td className="border-r px-4 py-2">{item.no}</td>
-                  <td className="border-r px-4 py-2">{item.estate}</td>
+                  <td className="border-r px-4 py-2">{item.sppb}</td>
                   <td className="border-r px-4 py-2">{item.workCode}</td>
                   <td className="border-r px-4 py-2">{item.createdDate}</td>
                   <td className="px-4 py-2 flex gap-x-3 items-center justify-center">
                     <button
                       onClick={() =>
-                        navigate(`/sppb-filling/detail/${item.no}`)
+                        navigate(`/sppb-filling/detail/${item.id}?from=filling`)
                       }
                       className="text-blue-600 hover:text-blue-800"
                       title="Edit"
