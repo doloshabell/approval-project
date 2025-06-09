@@ -5,11 +5,13 @@ import Input from "../../components/form/input/InputField";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import { FaSearch } from "react-icons/fa";
+import { IoDocumentOutline } from "react-icons/io5";
 import { FiEye } from "react-icons/fi";
 import { useNavigate } from "react-router-dom";
 import {
   getAllRequestByDistrictId,
   getAllRequest,
+  getRequestReportById,
 } from "../../services/requestSppbService";
 
 interface SupplyRequestItem {
@@ -52,6 +54,8 @@ export default function ApprovalMonitoring() {
   const [searchTerm, setSearchTerm] = useState("");
   const [data, setData] = useState<MappedRequestItem[] | null>(null);
 
+  const token = localStorage.getItem("userToken");
+
   const filteredData = data ?? [];
 
   const pageCount = Math.ceil(filteredData.length / itemsPerPage);
@@ -72,7 +76,6 @@ export default function ApprovalMonitoring() {
 
   const fetchData = async () => {
     try {
-      const token = localStorage.getItem("userToken");
       if (!token) throw new Error("Token not found");
       // console.log(localStorage.getItem("userData"));
 
@@ -179,7 +182,9 @@ export default function ApprovalMonitoring() {
                     <td className="border px-4 py-2">{offset + idx + 1}</td>
                     <td className="border px-4 py-2">{item.sppb}</td>
                     <td className="border px-4 py-2">{item.workCode}</td>
-                    <td className="border px-4 py-2">{item.lastApprovalDate}</td>
+                    <td className="border px-4 py-2">
+                      {item.lastApprovalDate}
+                    </td>
                     <td className="border px-4 py-2">{item.status}</td>
                     <td className="border px-4 py-2 text-center">
                       <button
@@ -191,6 +196,23 @@ export default function ApprovalMonitoring() {
                         className="mr-2 text-blue-600 hover:text-blue-800"
                       >
                         <FiEye size={18} />
+                      </button>
+
+                      {/* <a
+                        href={`/approval/${item.id}/report`}
+                        className="mr-2 text-blue-600 hover:text-blue-800"
+                        download
+                      >
+                        <IoDocumentOutline size={18} />
+                      </a> */}
+
+                      <button
+                        className="mr-2 text-blue-600 hover:text-blue-800"
+                        onClick={() => {
+                          getRequestReportById(item.id, token!);
+                        }}
+                      >
+                        <IoDocumentOutline size={18} />
                       </button>
                     </td>
                   </tr>
