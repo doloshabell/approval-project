@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -7,7 +8,10 @@ import Input from "../../components/form/input/InputField";
 import { AiFillDelete } from "react-icons/ai";
 import MaterialModal from "../../components/modals/MaterialModal";
 import { FaSearch } from "react-icons/fa";
-import { getDetailRequest } from "../../services/requestSppbService";
+import {
+  createSppbRequest,
+  getDetailRequest,
+} from "../../services/requestSppbService";
 
 export interface DetailAsset {
   id: number;
@@ -54,17 +58,19 @@ export interface SppbDetailResponse {
 }
 
 interface SppbItem {
+  assetId: number;
   materialCode: string;
   materialName: string;
-  satuan: string;
-  qty: string;
+  measurementUnit: string;
+  qty: number;
   keterangan: string;
 }
 
 interface Material {
+  assetId: number;
   code: string;
   name: string;
-  satuan: string;
+  measurementUnit: string;
 }
 
 export default function DetailSppb() {
@@ -74,12 +80,14 @@ export default function DetailSppb() {
   const params = new URLSearchParams(location.search);
   const from = params.get("from");
   const token = localStorage.getItem("userToken");
+  const storedUserData = localStorage.getItem("userData");
+  const userData = storedUserData ? JSON.parse(storedUserData) : null;
+console.log(userData);
   const [formData, setFormData] = useState({
-    noSppb: "",
-    kodeKerja: "",
-    namaPerusahaan: "",
-    estate: "",
-    afdeling: "",
+    companyName: "PT SWAKARSA SINARSENTOSA",
+    afdeling: userData?.district?.name,
+    estate: userData?.district?.estate?.name,
+    workCode: "",
   });
 
   const getTitleBySource = () => {
@@ -105,10 +113,11 @@ export default function DetailSppb() {
     setItems([
       ...items,
       {
+        assetId: 0,
         materialCode: "",
         materialName: "",
-        satuan: "",
-        qty: "",
+        measurementUnit: "",
+        qty: 0,
         keterangan: "",
       },
     ]);
@@ -119,8 +128,11 @@ export default function DetailSppb() {
     field: keyof SppbItem,
     value: string
   ) => {
-    const updatedItems = [...items];
-    updatedItems[index][field] = value;
+    const updatedItems: SppbItem[] = [...items];
+    updatedItems[index] = {
+      ...updatedItems[index],
+      [field]: value,
+    };
     setItems(updatedItems);
   };
 
@@ -136,18 +148,44 @@ export default function DetailSppb() {
   const handleSelectMaterial = (material: Material) => {
     if (selectedItemIndex === null) return;
     const updatedItems = [...items];
+    console.log(updatedItems);
     updatedItems[selectedItemIndex] = {
       ...updatedItems[selectedItemIndex],
+      assetId: material.assetId,
       materialCode: material.code,
       materialName: material.name,
-      satuan: material.satuan,
+      measurementUnit: material.measurementUnit,
     };
     setItems(updatedItems);
     setModalOpen(false);
   };
 
-  const handleSave = () => {
-    alert("Data disimpan!");
+  const handleSave = async () => {
+    if (!token) return;
+
+    try {
+      const requestDetail = items.map((item) => ({
+        assetId: item.assetId!,
+        quantity: item.qty,
+        reason: item.keterangan,
+      }));
+
+      const payload = {
+        workCode: formData.workCode,
+        requestDetail,
+      };
+
+      console.log(payload);
+
+      const response = await createSppbRequest(payload, token);
+      console.log("SPPB berhasil dikirim:", response);
+
+      alert("SPPB berhasil disimpan.");
+      navigate(-1);
+    } catch (error) {
+      console.error("Gagal menyimpan SPPB:", error);
+      alert("Terjadi kesalahan saat menyimpan data.");
+    }
   };
 
   const handleCancel = () => {
@@ -163,9 +201,8 @@ export default function DetailSppb() {
 
       // Set formData
       setFormData({
-        noSppb: response.data.noRequest || "",
-        kodeKerja: response.data.workCode || "",
-        namaPerusahaan: response.data.companyName || "",
+        companyName: response.data.noRequest || "",
+        workCode: response.data.workCode || "",
         estate: response.data.detailDistrict.estate.name || "",
         afdeling: response.data.detailDistrict.name || "",
       });
@@ -174,8 +211,8 @@ export default function DetailSppb() {
       const mappedItems: SppbItem[] = detailItems.map((item: any) => ({
         materialCode: item.detailAsset?.materialCode || "",
         materialName: item.detailAsset?.assetName || "",
-        satuan: item.detailAsset?.measurementUnit || "",
-        qty: item.quantity?.toString() || "0",
+        measurementUnit: item.detailAsset?.measurementUnit || "",
+        qty: item.quantity,
         keterangan: item.reason || "",
       }));
 
@@ -196,21 +233,9 @@ export default function DetailSppb() {
       <div className="border rounded-2xl bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] lg:p-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
           <Input
-            label="No. SPPB"
-            name="noSppb"
-            value={formData.noSppb}
-            readOnly
-          />
-          <Input
-            label="Kode Kerja"
-            name="kodeKerja"
-            value={formData.kodeKerja}
-            readOnly
-          />
-          <Input
-            label="Nama Perusahaan"
-            name="namaPerusahaan"
-            value={formData.namaPerusahaan}
+            label="Company"
+            name="company"
+            value={formData.companyName}
             readOnly
           />
           <Input
@@ -224,6 +249,15 @@ export default function DetailSppb() {
             name="afdeling"
             value={formData.afdeling}
             readOnly
+          />
+          <Input
+            label="Work Code"
+            name="workCode"
+            type="text"
+            value={formData.workCode}
+            onChange={(e) =>
+              setFormData({ ...formData, workCode: e.target.value })
+            }
           />
         </div>
 
@@ -283,7 +317,7 @@ export default function DetailSppb() {
                     <td className="border px-3 py-2">
                       <Input
                         readOnly
-                        value={item.satuan}
+                        value={item.measurementUnit}
                         placeholder="Satuan"
                         className="bg-gray-50 dark:bg-gray-700"
                       />

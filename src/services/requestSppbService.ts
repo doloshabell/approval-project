@@ -7,50 +7,65 @@ type RequestDetailItem = {
 };
 
 type SppbPayload = {
-  noRequest: string;
-  noSppbGoodDispatch: string;
-  noSppbSupplyRequest: string;
   requestDetail: RequestDetailItem[];
   workCode: string;
 };
 
 export async function createSppbRequest(payload: SppbPayload, token: string) {
-    const response = await api.post("/request", payload, {
+  const response = await api.post("/request", payload, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return response.data;
+}
+
+export async function getAllRequest(workCode: string, token: string) {
+  const response = await api.get(
+    `/request?workCode=${encodeURIComponent(workCode)}`,
+    {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    });
-  
-    return response.data;
-  }
+    }
+  );
 
+  return response.data;
+}
 
-  export async function getAllRequest(workCode: string, token: string) {
-    const response = await api.get(`/request?workCode=${encodeURIComponent(workCode)}`, {
+export async function getAllRequestByDistrictId(
+  districtId: number,
+  token: string
+) {
+  const response = await api.get(
+    `/approval/?districtId=${encodeURIComponent(districtId)}`,
+    {
       headers: {
         Authorization: `Bearer ${token}`,
       },
-    });
-  
-    return response.data;
-  }
+    }
+  );
 
-  export async function getAllRequestByDistrictId(districtId: number, token: string) {
-    const response = await api.get(`/approval/?districtId=${encodeURIComponent(districtId)}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  
-    return response.data;
-  }
+  return response.data;
+}
 
-    export async function getDetailRequest(id: string, token: string) {
-    const response = await api.get(`/request/${encodeURIComponent(id)}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-  
-    return response.data;
-  }
+export async function getDetailRequest(id: string, token: string) {
+  const response = await api.get(`/request/${encodeURIComponent(id)}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return response.data;
+}
+
+export async function deleteRequest(id: string, token: string) {
+  const response = await api.delete(`/request/${encodeURIComponent(id)}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+
+  return response.data;
+}

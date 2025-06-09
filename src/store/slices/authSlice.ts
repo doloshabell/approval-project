@@ -38,10 +38,10 @@ const authSlice = createSlice({
       state.user = action.payload;
       localStorage.setItem("userData", JSON.stringify(action.payload));
     },
-    signOut: (state) => {
+    signOut: (state) => { 
       state.user = null;
-      localStorage.removeItem("user");
-      localStorage.removeItem("token");
+      localStorage.removeItem("userData");
+      localStorage.removeItem("userToken");
     }
     
   },

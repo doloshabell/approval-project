@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import {
   getAllRequestByDistrictId,
   getAllRequest,
+  deleteRequest,
 } from "../../services/requestSppbService";
 
 interface SupplyRequestItem {
@@ -20,6 +21,7 @@ interface SupplyRequestItem {
   companyName: string;
   noRequest: string;
   lastApprovalDate: Date;
+  createdDate: Date;
   isFullyApproved: boolean;
 }
 
@@ -38,26 +40,11 @@ interface MappedRequestItem {
   no: number;
   sppb: string;
   estate: string;
-  kdkj: string;
+  workCode: string;
   dateApproval: string;
+  createdDate: string;
   status: "Approved" | "Rejected";
 }
-
-
-type SppbItem = {
-  no: string;
-  estate: string;
-  kdkj: string;
-  tanggal: string;
-};
-
-// Dummy data
-// const dummyData: SppbItem[] = Array.from({ length: 53 }, (_, i) => ({
-//   no: `SPPB-${i + 1}`,
-//   estate: `Estate ${i + 1}`,
-//   kdkj: `KDKJ-${i + 1}`,
-//   tanggal: `${(i % 30) + 1}-06-2025`.padStart(10, "0"),
-// }));
 
 const perPageOptions = [10, 25, 50, 100];
 
@@ -66,17 +53,14 @@ export default function SppbFilling() {
   const [currentPage, setCurrentPage] = useState(0);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const [searchTerm, setSearchTerm] = useState("");
-    const [data, setData] = useState<MappedRequestItem[] | null>(null);
+  const [data, setData] = useState<MappedRequestItem[] | null>(null);
+  const token = localStorage.getItem("userToken");
+  const userDataString = localStorage.getItem("userData");
 
-  const filteredData = data
-    ? data.filter((item) =>
-        item.sppb.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : [];
+  const filteredData = data ?? [];
 
   const pageCount = Math.ceil(filteredData.length / itemsPerPage);
   const offset = currentPage * itemsPerPage;
-  // const currentItems = [];
   const currentItems = filteredData.slice(offset, offset + itemsPerPage);
 
   const handlePageClick = (event: { selected: number }) => {
@@ -90,50 +74,58 @@ export default function SppbFilling() {
     setCurrentPage(0);
   };
 
+  const fetchData = async () => {
+    try {
+      if (!token) throw new Error("Token not found");
 
-    const fetchData = async () => {
-      try {
-        const token = localStorage.getItem("userToken");
-        if (!token) throw new Error("Token not found");
-        // console.log(localStorage.getItem("userData"));
-  
-        const userDataString = localStorage.getItem("userData");
-  
-        if (userDataString) {
-          const userData = JSON.parse(userDataString);
-          const districtId = userData?.district?.id;
-  
-          const roleCode = userData?.role?.code;
-  
-          console.log("District ID:", userData);
-  
+      if (userDataString) {
+        const userData = JSON.parse(userDataString);
+        const districtId = userData?.district?.id;
+
+        const roleCode = userData?.role?.code;
+
         const response: SupplyRequestResponse =
           roleCode === "admin"
             ? await getAllRequestByDistrictId(districtId, token)
-            : await getAllRequest('', token);
-  
-        const mapped = response.data.map((item, index) => ({
-          id: item.id,
-          no: index + 1,
-          sppb: item.noSppbSupplyRequest,
-          estate: item.companyName.trim(),
-          kdkj: item.workCode,
-          dateApproval: item.lastApprovalDate ?? "N/A",
-          status: item.isFullyApproved == true ? "Yes" : "No",
-        }));
-  
+            : await getAllRequest("", token);
+
+        const mapped: MappedRequestItem[] = response.data.map(
+          (item, index) => ({
+            id: item.id,
+            no: index + 1,
+            sppb: item.noSppbSupplyRequest,
+            estate: item.companyName.trim(),
+            workCode: item.workCode,
+            dateApproval: item.lastApprovalDate
+              ? new Date(item.lastApprovalDate).toISOString().split("T")[0]
+              : "N/A",
+            createdDate: item.createdDate
+              ? new Date(item.createdDate).toISOString().split("T")[0]
+              : "N/A",
+            status: item.isFullyApproved ? "Approved" : "Rejected", // ✅ harus match dengan union type
+          })
+        );
+
         setData(mapped);
-        }
-        // const response: SupplyRequestResponse = await getAllRequest("", token);
-  
-      } catch (err) {
-        console.error("Failed to fetch data", err);
       }
-    };
-  
-    useEffect(() => {
+      // const response: SupplyRequestResponse = await getAllRequest("", token);
+    } catch (err) {
+      console.error("Failed to fetch data", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const deleteRequestSppb = async (id: string) => {
+    try {
+      await deleteRequest(id, token ?? "");
       fetchData();
-    }, []);
+    } catch (err) {
+      console.error("Failed to delete data", err);
+    }
+  };
 
   return (
     <>
@@ -179,11 +171,7 @@ export default function SppbFilling() {
             </div>
           </div>
           <button
-          onClick={() =>
-            navigate(
-              `/sppb-filling/add`
-            )
-          }
+            onClick={() => navigate(`/sppb-filling/add`)}
             type="button"
             className="inline-flex items-center gap-2 rounded bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition"
           >
@@ -196,7 +184,7 @@ export default function SppbFilling() {
           <table className="min-w-full table-auto border-collapse text-sm">
             <thead className="bg-gray-100 dark:bg-gray-800 dark:text-white">
               <tr>
-                <th className="border px-4 py-2 text-left">No. SPPB</th>
+                <th className="border px-4 py-2 text-left">No.</th>
                 <th className="border px-4 py-2 text-left">Estate</th>
                 <th className="border px-4 py-2 text-left">Work Code</th>
                 <th className="border px-4 py-2 text-left">Date Request</th>
@@ -204,19 +192,17 @@ export default function SppbFilling() {
               </tr>
             </thead>
             <tbody>
-              {currentItems.map((item, idx) => (
-                <tr key={idx} className="border dark:text-white">
+              {currentItems.map((item) => (
+                <tr key={item.id} className="border dark:text-white">
                   <td className="border-r px-4 py-2">{item.no}</td>
                   <td className="border-r px-4 py-2">{item.estate}</td>
-                  <td className="border-r px-4 py-2">{item.kdkj}</td>
-                  <td className="border-r px-4 py-2">{item.tanggal}</td>
+                  <td className="border-r px-4 py-2">{item.workCode}</td>
+                  <td className="border-r px-4 py-2">{item.createdDate}</td>
                   <td className="px-4 py-2 flex gap-x-3 items-center justify-center">
                     <button
-                    onClick={() =>
-                      navigate(
-                        `/sppb-filling/detail/${item.no}`
-                      )
-                    }
+                      onClick={() =>
+                        navigate(`/sppb-filling/detail/${item.no}`)
+                      }
                       className="text-blue-600 hover:text-blue-800"
                       title="Edit"
                     >
@@ -225,7 +211,7 @@ export default function SppbFilling() {
                     <button
                       className="text-red-600 hover:text-red-800"
                       title="Delete"
-                      onClick={() => confirm(`Hapus ${item.no}?`)}
+                      onClick={() => deleteRequestSppb(item.id.toString())}
                     >
                       <FiTrash2 size={18} />
                     </button>
